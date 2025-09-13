@@ -4,20 +4,21 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo "Building project..."
+                echo "✅ Building project..."
                 sh 'ls -l'
             }
         }
         stage('Test') {
             steps {
-                echo "Running tests..."
+                echo "🧪 Running tests..."
                 sh 'echo All tests passed!'
             }
         }
         stage('Deploy') {
             steps {
-                echo "Deploying application..."
+                echo "🚀 Deploying application..."
             }
         }
     }
 }
+
