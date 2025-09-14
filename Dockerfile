@@ -1,15 +1,14 @@
-# Use lightweight Python image
 FROM python:3.9-slim
 
-# Set working directory inside container
 WORKDIR /app
 
-# Copy all project files
-COPY . .
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install dependencies if requirements.txt exists
-RUN pip install --no-cache-dir -r requirements.txt || true
+# Copy app
+COPY app.py .
 
-# Run the Python app
+EXPOSE 5000
+
 CMD ["python", "app.py"]
-
