@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven3'   // Configure Maven in Jenkins Global Tool Config
-        jdk 'JDK17'      // Configure JDK in Jenkins Global Tool Config
+        maven 'Maven3'
+        jdk 'JDK17'
     }
 
     stages {
@@ -15,15 +15,31 @@ pipeline {
 
         stage('Build') {
             steps {
-                dir('sample-app') {   // 👈 run inside sample-app where pom.xml is located
-                    sh 'mvn clean package'
+                dir('sample-app') {
+                    sh 'mvn clean compile'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('sample-app') {
+                    sh 'mvn test'
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                dir('sample-app') {
+                    sh 'mvn package'
                 }
             }
         }
 
         stage('Upload to JFrog Artifactory') {
             steps {
-                dir('sample-app') {   // 👈 upload built JAR from sample-app/target
+                dir('sample-app') {
                     sh '''
                       curl -u $ARTIFACTORY_USER:$ARTIFACTORY_PASSWORD \
                       -T target/sample-app-1.0-SNAPSHOT.jar \
