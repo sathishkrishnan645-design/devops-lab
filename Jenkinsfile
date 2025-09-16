@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven3'
-        jdk 'JDK17'
+        maven 'Maven3'   // Make sure Maven3 is configured in Jenkins Global Tool Config
+        jdk 'JDK17'      // Make sure JDK17 is configured in Jenkins Global Tool Config
     }
 
     stages {
@@ -22,17 +22,20 @@ pipeline {
         }
 
         stage('Upload to JFrog Artifactory') {
-            environment {
-                ARTIFACTORY_URL = "http://43.204.153.178/artifactory"
-                ARTIFACTORY_REPO = "maven-release-local"
-            }
             steps {
                 dir('sample-app') {
-                    sh '''
-                      curl -u $ARTIFACTORY_USER:$ARTIFACTORY_PASSWORD \
-                        -T target/sample-app-1.0-SNAPSHOT.jar \
-                        "$ARTIFACTORY_URL/$ARTIFACTORY_REPO/com/devops/lab/sample-app/1.0-SNAPSHOT/sample-app-1.0-SNAPSHOT.jar"
-                    '''
+                    withCredentials([usernamePassword(
+                        credentialsId: 'artifactory-credentials',   // Create this credential in Jenkins
+                        usernameVariable: 'ART_USER',
+                        passwordVariable: 'ART_PASS'
+                    )]) {
+                        sh '''
+                            curl -u $ART_USER:$ART_PASS \
+                                 -T target/sample-app-1.0-SNAPSHOT.jar \
+                                 "http://43.204.153.178/artifactory/maven-release-local/com/devops/lab/sample-app/1.0-SNAPSHOT/sample-app-1.0-SNAPSHOT.jar"
+                        '''
+                        echo "✅ Uploaded artifact to Artifactory"
+                    }
                 }
             }
         }
@@ -40,7 +43,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline executed successfully and artifact uploaded to Artifactory!'
+            echo '✅ Pipeline executed successfully!'
         }
         failure {
             echo '❌ Pipeline failed!'
