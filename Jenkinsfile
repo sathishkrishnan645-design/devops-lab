@@ -2,16 +2,14 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK17'          // JDK name configured in Jenkins
-        maven 'Maven3'       // Maven name configured in Jenkins
+        maven 'Maven3'   // Configure Maven in Jenkins Global Tool Config
+        jdk 'JDK17'      // Configure JDK in Jenkins Global Tool Config
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    credentialsId: 'github-credentials',
-                    url: 'https://github.com/sathishkrishnan645-design/devops-lab.git'
+                git branch: 'main', url: 'https://github.com/sathishkrishnan645-design/devops-lab.git'
             }
         }
 
@@ -26,11 +24,11 @@ pipeline {
         stage('Upload to JFrog Artifactory') {
             steps {
                 dir('sample-app') {
-                    sh """
+                    sh '''
                         curl -u admin:password \
-                          -T target/sample-app-1.0-SNAPSHOT.jar \
-                          http://43.204.153.178/artifactory/libs-release-local/com/devops/lab/sample-app/1.0-SNAPSHOT/sample-app-1.0-SNAPSHOT.jar
-                    """
+                        -T target/sample-app-1.0-SNAPSHOT.jar \
+                        "http://43.204.153.178/artifactory/example-repo-local/com/devops/lab/sample-app/1.0-SNAPSHOT/sample-app-1.0-SNAPSHOT.jar"
+                    '''
                 }
             }
         }
@@ -38,10 +36,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Pipeline completed successfully!"
+            echo '✅ Pipeline executed successfully!'
         }
         failure {
-            echo "❌ Pipeline failed!"
+            echo '❌ Pipeline failed!'
         }
     }
 }
