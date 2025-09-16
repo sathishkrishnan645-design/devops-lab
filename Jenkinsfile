@@ -6,6 +6,11 @@ pipeline {
         jdk 'JDK17'
     }
 
+    environment {
+        ARTIFACTORY_USER = credentials('admin')   // Add this in Jenkins credentials
+        ARTIFACTORY_PASSWORD = credentials('password')
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -20,9 +25,6 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            environment {
-                scannerHome = tool 'SonarScanner'
-            }
             steps {
                 withSonarQubeEnv('SonarQubeServer') {
                     sh 'mvn sonar:sonar'
@@ -35,7 +37,7 @@ pipeline {
                 sh '''
                   curl -u $ARTIFACTORY_USER:$ARTIFACTORY_PASSWORD \
                   -T target/sample-app-1.0-SNAPSHOT.jar \
-                  "http://43.204.153.178:8081/artifactory/libs-release-local/com/devops/lab/sample-app/1.0-SNAPSHOT/sample-app-1.0-SNAPSHOT.jar"
+                  "http://43.204.153.178:8082/artifactory/libs-release-local/com/devops/lab/sample-app/1.0-SNAPSHOT/sample-app-1.0-SNAPSHOT.jar"
                 '''
             }
         }
@@ -43,10 +45,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline executed successfully!'
+            echo '✅ Pipeline executed successfully!'
         }
         failure {
-            echo 'Pipeline failed!'
+            echo '❌ Pipeline failed!'
         }
     }
 }
