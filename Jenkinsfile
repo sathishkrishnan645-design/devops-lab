@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven3'
+        jdk 'JDK17'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -8,24 +13,40 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build') {
             steps {
-                script {
-                    sh 'docker build -t my-python-app:latest ./project'
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            environment {
+                scannerHome = tool 'SonarScanner'
+            }
+            steps {
+                withSonarQubeEnv('SonarQubeServer') {
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
 
-        stage('Run Container') {
+        stage('Upload to JFrog Artifactory') {
             steps {
-                script {
-                    // Stop old container if running
-                    sh 'docker rm -f my-python-container || true'
-                    
-                    // Run new container
-                    sh 'docker run -d --name my-python-container -p 5000:5000 my-python-app:latest'
-                }
+                sh '''
+                  curl -u $ARTIFACTORY_USER:$ARTIFACTORY_PASSWORD \
+                  -T target/sample-app-1.0-SNAPSHOT.jar \
+                  "http://43.204.153.178:8081/artifactory/libs-release-local/com/devops/lab/sample-app/1.0-SNAPSHOT/sample-app-1.0-SNAPSHOT.jar"
+                '''
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
