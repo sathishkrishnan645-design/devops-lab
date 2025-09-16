@@ -2,16 +2,22 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven3'
-        jdk 'JDK17'
-    }
-
-    environment {
-        ARTIFACTORY_USER = credentials('admin')   // Add this in Jenkins credentials
-        ARTIFACTORY_PASSWORD = credentials('password')
+        maven 'Maven3'   // Jenkins will auto-install Maven
+        jdk 'JDK17'      // Jenkins will auto-install JDK 17
     }
 
     stages {
+        stage('Environment Check') {
+            steps {
+                sh '''
+                  echo "=== JAVA VERSION ==="
+                  java -version
+                  echo "=== MAVEN VERSION ==="
+                  mvn -version
+                '''
+            }
+        }
+
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/sathishkrishnan645-design/devops-lab.git'
@@ -25,6 +31,9 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
+            environment {
+                scannerHome = tool 'SonarScanner'
+            }
             steps {
                 withSonarQubeEnv('SonarQubeServer') {
                     sh 'mvn sonar:sonar'
