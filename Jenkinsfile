@@ -2,22 +2,11 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven3'   // Jenkins will auto-install Maven
-        jdk 'JDK17'      // Jenkins will auto-install JDK 17
+        maven 'Maven3'   // Configure Maven in Jenkins Global Tool Config
+        jdk 'JDK17'      // Configure JDK in Jenkins Global Tool Config
     }
 
     stages {
-        stage('Environment Check') {
-            steps {
-                sh '''
-                  echo "=== JAVA VERSION ==="
-                  java -version
-                  echo "=== MAVEN VERSION ==="
-                  mvn -version
-                '''
-            }
-        }
-
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/sathishkrishnan645-design/devops-lab.git'
