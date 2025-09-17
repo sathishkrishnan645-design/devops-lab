@@ -1,48 +1,53 @@
 pipeline {
     agent any
+
     environment {
-        ARTIFACTORY_URL = 'http://43.204.153.178/artifactory/libs-release-local/simple-webapp.war'
+        WAR_NAME = 'sharmili-devops-lab.war'
+        TOMCAT_HOST = '3.111.164.150'
+        WAR_SRC = 'war-temp'
     }
+
     stages {
-        stage('Checkout Source') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/sathishkrishnan645-design/devops-lab.git'
+                git branch: 'master', url: 'https://github.com/sathishkrishnan645-design/devops-lab.git', credentialsId: 'github-credentials'
             }
         }
 
-        stage('Download Sample WAR') {
+        stage('Build WAR') {
             steps {
-                sh 'wget -O simple-webapp.war https://tomcat.apache.org/tomcat-7.0-doc/appdev/sample/sample.war'
+                sh "jar -cvf ${WAR_NAME} -C ${WAR_SRC} ."
             }
         }
 
-        stage('Push WAR to Artifactory (Optional)') {
+        stage('SonarQube Analysis') {
             steps {
-                sh """
-                curl -u admin:password -T simple-webapp.war ${ARTIFACTORY_URL}
-                """
+                sh "sonar-scanner -Dsonar.projectKey=SharmiliLab -Dsonar.sources=${WAR_SRC} -Dsonar.host.url=http://3.111.164.150:9000 -Dsonar.login=Sharmili@123"
             }
         }
 
-        stage('Deploy to Tomcat') {
+        stage('Push WAR to JFrog') {
             steps {
-                sh 'ansible-playbook -i ansible/hosts ansible/deploy_simple_webapp.yml'
+                sh "curl -u admin:password -T ${WAR_NAME} http://43.204.153.178/artifactory/simple-webapp/${WAR_NAME}"
             }
         }
 
-        stage('Monitor & Logs Integration') {
+        stage('Deploy via Ansible') {
             steps {
-                echo 'Trigger Prometheus Alert / Log Splunk Event Collector (Placeholder)'
-                // Example curl call:
-                // curl -X POST http://splunk-server:8088/services/collector -H "Authorization: Splunk <token>" -d '{"event": "Deployment Successful"}'
+                sh "ansible-playbook -i ansible/hosts ansible/deploy_simple_webapp.yml --extra-vars 'war_name=${WAR_NAME}'"
             }
         }
 
-        stage('Verify Deployment') {
+        stage('Monitor & Logging') {
             steps {
-                echo 'Access app at http://3.111.164.150:8081/simple-webapp'
+                echo 'Metrics collected in Prometheus/Grafana, logs sent to Splunk'
             }
         }
+    }
+
+    post {
+        success { echo 'Pipeline completed successfully!' }
+        failure { echo 'Pipeline failed!' }
     }
 }
 

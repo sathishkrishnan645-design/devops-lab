@@ -1,17 +1,20 @@
-- name: Deploy Simple WebApp WAR
+---
+- name: Deploy sharmili-devops-lab.war to Tomcat
   hosts: tomcat-server
   become: yes
+  vars:
+    war_name: sharmili-devops-lab.war
+    tomcat_webapps_dir: /opt/tomcat/webapps
   tasks:
     - name: Copy WAR to Tomcat webapps
       copy:
-        src: /home/ec2-user/Devops-lab/simple-webapp/sharmili-devops-lab.war
-        dest: /usr/local/tomcat/webapps/simple-webapp.war
+        src: "{{ war_name }}"
+        dest: "{{ tomcat_webapps_dir }}/{{ war_name }}"
         mode: '0644'
 
     - name: Restart Tomcat
-      shell: |
-        /usr/local/tomcat/bin/shutdown.sh || true
-        /usr/local/tomcat/bin/startup.sh
-      args:
-        executable: /bin/bash
+      service:
+        name: tomcat
+        state: restarted
+ 
 
