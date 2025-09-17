@@ -3,14 +3,16 @@ pipeline {
 
     environment {
         WAR_NAME = 'sharmili-devops-lab.war'
-        TOMCAT_HOST = '3.111.164.150'
         WAR_SRC = 'war-temp'
+        TOMCAT_HOST = '3.111.164.150'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                git branch: 'master', url: 'https://github.com/sathishkrishnan645-design/devops-lab.git', credentialsId: 'github-credentials'
+                git branch: 'master',
+                    url: 'https://github.com/sathishkrishnan645-design/devops-lab.git',
+                    credentialsId: 'github-credentials'
             }
         }
 
@@ -26,7 +28,7 @@ pipeline {
             }
         }
 
-        stage('Push WAR to JFrog') {
+        stage('Push WAR to Artifactory') {
             steps {
                 sh "curl -u admin:password -T ${WAR_NAME} http://43.204.153.178/artifactory/simple-webapp/${WAR_NAME}"
             }
@@ -34,13 +36,21 @@ pipeline {
 
         stage('Deploy via Ansible') {
             steps {
+                // Copy WAR to Ansible folder for deployment
+                sh "cp ${WAR_NAME} ansible/"
                 sh "ansible-playbook -i ansible/hosts ansible/deploy_simple_webapp.yml --extra-vars 'war_name=${WAR_NAME}'"
             }
         }
 
-        stage('Monitor & Logging') {
+        stage('Monitoring & Logging') {
             steps {
                 echo 'Metrics collected in Prometheus/Grafana, logs sent to Splunk'
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                sh "curl -I http://${TOMCAT_HOST}:8081/simple-webapp/"
             }
         }
     }

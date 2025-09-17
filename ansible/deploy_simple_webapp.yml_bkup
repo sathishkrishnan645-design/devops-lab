@@ -12,10 +12,9 @@
         dest: "{{ tomcat_webapps_dir }}/{{ war_name }}"
         mode: '0644'
 
-    - name: Stop Tomcat (ignore if not running)
-      shell: /opt/tomcat/bin/shutdown.sh
-      ignore_errors: yes
-
-    - name: Start Tomcat
-      shell: /opt/tomcat/bin/startup.sh
+    - name: Restart Tomcat
+      service:
+        name: tomcat
+        state: restarted
+ 
 
